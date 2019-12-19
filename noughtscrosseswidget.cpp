@@ -1,14 +1,40 @@
+#include <stdexcept>
+
+#include <Qt>
+#include <QtWidgets>
+#include <QLabel>
+#include <QPushButton>
+#include <QString>
+#include <QFrame>
+
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
+#include <QQuickWidget>
+
+#include <QQmlContext>
+#include <QQmlEngine>
+
+#include <QPixmap>
 #include "noughtscrosseswidget.h"
+
 
 Widget::Widget()
 
 {
+
+    initializeWins();
+
+
+    firstPlayer = "nought";
+
     noughtImg = new QPixmap("://images/nought.png");
     crossImg = new QPixmap("://images/cross.png");
     initializeHomeView();
-
+    initializeGameView();
     layout = new QStackedLayout;
     layout->addWidget(homeView);
+    layout->addWidget(gameView);
     setLayout(layout);
 }
 
@@ -54,8 +80,8 @@ void Widget::initializeHomeView()
     nameLabel->setAlignment(Qt::AlignCenter);
 
 
-    startGameButton *startButton = new startGameButton("&Start game", this);
-
+    Button *startButton = new Button("&Start game", this);
+    connect(startButton, SIGNAL(clicked()), this, SLOT(setGameView()));
     QHBoxLayout *startButtonBox = new QHBoxLayout;
     startButtonBox->addStretch(50);
     startButtonBox->addWidget(startButton, Qt::AlignCenter);
@@ -71,6 +97,215 @@ void Widget::initializeHomeView()
     homeLayout->addSpacing(78);
     homeView->setLayout(homeLayout);
 }
+
+void Widget::initializeGameView()
+{
+
+    gameView = new QWidget;
+
+
+    int size {23};
+    QPixmap noughtImg23 = noughtImg->scaled(size, size, Qt::KeepAspectRatio,
+                                            Qt::SmoothTransformation);
+    QLabel *noughtScoreIcon = new QLabel;
+    noughtScoreIcon->setPixmap(noughtImg23);
+    QPixmap crossImg23 = crossImg->scaled(size, size, Qt::KeepAspectRatio,
+                                          Qt::SmoothTransformation);
+    QLabel *crossScoreIcon = new QLabel;
+    crossScoreIcon->setPixmap(crossImg23);
+
+
+    QQuickWidget *gameGrid = new QQuickWidget;
+    gameGrid->engine()->rootContext()->setContextProperty("W", this);
+    gameGrid->setSource(QUrl(QStringLiteral("qrc:/qml/gamegrid.qml")));
+
+
+    QHBoxLayout *gameGridBox = new QHBoxLayout;
+    gameGridBox->addStretch(20);
+    gameGridBox->addWidget(gameGrid, Qt::AlignCenter);
+    gameGridBox->addStretch(20);
+
+
+    greyButton *backButton = new greyButton("&Back", this);
+    Button *newButton = new Button("&New game", this);
+    connect(backButton, SIGNAL(clicked()), this, SLOT(setHomeView()));
+    connect(newButton, SIGNAL(clicked()), this, SLOT(newGame()));
+
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
+    buttonLayout->addWidget(backButton);
+    buttonLayout->addWidget(newButton);
+
+
+    noughtScoreLabel = new scoreLabel("nought");
+    QHBoxLayout *noughtScoreBox = new QHBoxLayout;
+    noughtScoreBox->addWidget(noughtScoreIcon, Qt::AlignRight);
+    noughtScoreBox->addWidget(noughtScoreLabel, Qt::AlignLeft);
+
+    crossScoreLabel = new scoreLabel("cross");
+    QHBoxLayout *crossScoreBox = new QHBoxLayout;
+    crossScoreBox->addWidget(crossScoreIcon, Qt::AlignRight);
+    crossScoreBox->addWidget(crossScoreLabel, Qt::AlignLeft);
+
+
+    setScoreLabels();
+
+
+    QHBoxLayout *scoreBox = new QHBoxLayout;
+    scoreBox->addLayout(noughtScoreBox);
+    scoreBox->addStretch(50);
+    scoreBox->addLayout(crossScoreBox);
+
+
+    whoseTurn = new infoLabel;
+    whoseTurn->setAlignment(Qt::AlignCenter);
+
+
+    gameFrame *frame = new gameFrame;
+    frame->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
+    frame->setBaseSize(490, 660);
+
+
+    QFrame *whiteLine = new QFrame;
+    whiteLine->setFrameStyle(QFrame::HLine | QFrame::Plain);
+    whiteLine->setStyleSheet("border: 2px solid white");
+
+
+    QVBoxLayout *frameLayout = new QVBoxLayout;
+    frameLayout->addLayout(scoreBox);
+    frameLayout->addWidget(whiteLine);
+    frameLayout->addWidget(whoseTurn);
+    frameLayout->addLayout(gameGridBox);
+    frameLayout->addSpacing(75);
+    frame->setLayout(frameLayout);
+
+
+    connect(this, SIGNAL(stateChanged(QString)), whoseTurn, SLOT(setTextTurn(QString)));
+
+    connect(this, SIGNAL(gameOver(QString)), this, SLOT(endGame(QString)));
+
+
+    QVBoxLayout *gameLayout = new QVBoxLayout;
+    gameLayout->addWidget(frame);
+    gameLayout->addSpacing(33);
+    gameLayout->addLayout(buttonLayout);
+    gameLayout->addSpacing(78);
+    gameView->setLayout(gameLayout);
+
+}
+
+void Widget::setGameView()
+{
+
+    resetGame();
+    initializeWins();
+    setScoreLabels();
+    layout->setCurrentIndex(1);
+}
+
+void Widget::resetGame()
+{
+
+    gameInProgress = true;
+
+    setState(firstPlayer);
+
+    firstPlayer = toggleNX(firstPlayer);
+
+    nxdata.reset(new NXData());
+
+    emit gameReset();
+}
+
+void Widget::initializeWins()
+{
+
+    wins["nought"] = 0;
+    wins["cross"] = 0;
+}
+
+void Widget::setScoreLabels()
+{
+    noughtScoreLabel->setText(wins["nought"]);
+    crossScoreLabel->setText(wins["cross"]);
+}
+
+void Widget::setHomeView()
+{
+
+    layout->setCurrentIndex(0);
+}
+
+
+void Widget::endGame(const QString gameStatus)
+{
+
+    gameInProgress = false;
+
+
+    if (gameStatus=="draw") {
+        whoseTurn->setTextDraw();
+    }
+    else {
+        whoseTurn->setTextWin(gameStatus);
+        incrementWinner(gameStatus);
+    }
+
+}
+
+void Widget::newGame()
+{
+    resetGame();
+}
+
+void Widget::incrementWinner(const QString winner)
+{
+    wins[winner] += 1;
+    setScoreLabels();
+}
+
+void Widget::setState(const QString newState)
+{
+
+    if (newState == "cross" || newState == "nought") {
+        currentState = newState;
+        emit stateChanged(currentState);
+    }
+    else
+        throw std::invalid_argument("State should be 'nought' or 'cross'.");
+}
+
+QString Widget::toggleNX(QString item)
+{
+    if (item == "cross")
+        return "nought";
+    else if (item == "nought")
+        return "cross";
+    else
+        throw std::invalid_argument("State should be 'nought' or 'cross'.");
+}
+
+void Widget::setGridItem(const QString which)
+{
+
+    std::size_t n {which.toUInt()};
+
+    std::size_t row {n/3};
+    std::size_t column {n%3};
+    QString gameStatus = nxdata->setItem(row, column, currentState);
+    if (!gameStatus.isEmpty()) {
+        emit gameOver(gameStatus);
+    }
+}
+
+void Widget::toggleState()
+{
+
+    if (gameInProgress) {
+        setState(toggleNX(currentState));
+    }
+}
+
 
 
 

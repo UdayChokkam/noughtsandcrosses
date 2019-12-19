@@ -14,7 +14,12 @@ QPushButton {
     
 }
 
-startGameButton {
+QPushButton:pressed {
+    border-style: inset;
+    background-color: #707070
+}
+
+Button {
     background-color: white;
     color: #313131;
 }
@@ -26,4 +31,32 @@ gameLabel {
     font-family:"Roboto Condensed";
     font-style:"Regular";
 }
+
+
+greyButton {
+    background-color: #313131;
+    color: white;
+}
+
+
+scoreLabel {
+    color:white;
+    font-size:21pt;
+    font-style:"bold";
+}
+
+infoLabel {
+    color:white;
+    font-size:31pt;
+    font-family:"Roboto Condensed";
+    font-style:"Regular";
+}
+
+gameFrame {
+    border: 2px solid white;
+    border-radius: 25px;
+    padding: 2px;
+
+}
+
 
