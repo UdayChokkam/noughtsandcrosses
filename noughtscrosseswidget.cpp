@@ -23,6 +23,7 @@ Widget::Widget()
 
 {
 
+    initializeWins();
 
 
     firstPlayer = "nought";
@@ -147,7 +148,7 @@ void Widget::initializeGameView()
     crossScoreBox->addWidget(crossScoreLabel, Qt::AlignLeft);
 
 
-
+    setScoreLabels();
 
 
     QHBoxLayout *scoreBox = new QHBoxLayout;
@@ -196,10 +197,38 @@ void Widget::initializeGameView()
 void Widget::setGameView()
 {
 
-
+    resetGame();
+    initializeWins();
+    setScoreLabels();
     layout->setCurrentIndex(1);
 }
 
+void Widget::resetGame()
+{
+
+    gameInProgress = true;
+
+    setState(firstPlayer);
+
+    firstPlayer = toggleNX(firstPlayer);
+
+    nxdata.reset(new NXData());
+
+
+}
+
+void Widget::initializeWins()
+{
+
+    wins["nought"] = 0;
+    wins["cross"] = 0;
+}
+
+void Widget::setScoreLabels()
+{
+    noughtScoreLabel->setText(wins["nought"]);
+    crossScoreLabel->setText(wins["cross"]);
+}
 
 void Widget::setHomeView()
 {
@@ -224,12 +253,15 @@ void Widget::endGame(const QString gameStatus)
 
 }
 
-
+void Widget::newGame()
+{
+    resetGame();
+}
 
 void Widget::incrementWinner(const QString winner)
 {
     wins[winner] += 1;
-
+    setScoreLabels();
 }
 
 void Widget::setState(const QString newState)

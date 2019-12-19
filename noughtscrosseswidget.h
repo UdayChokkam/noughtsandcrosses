@@ -42,7 +42,7 @@ protected:
 private slots:
     void setHomeView();
     void setGameView();
-
+    void newGame();
     void endGame(const QString gameStatus);
 private:
 
@@ -57,7 +57,9 @@ private:
     scoreLabel *noughtScoreLabel;
     scoreLabel *crossScoreLabel;
     infoLabel *whoseTurn;
-
+    void resetGame();
+    void initializeWins();
+     void setScoreLabels();
       bool gameInProgress = false;
       QString firstPlayer;
        QString toggleNX(QString item);
