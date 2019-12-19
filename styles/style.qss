@@ -1,0 +1,29 @@
+QWidget {
+    font-family: "Roboto";
+    background-color: #313131;
+}
+
+QPushButton {
+    border-radius: 31px;
+    border-color: white;
+    border-width: 1px;
+    border-style: solid;
+    font-style: bold;
+    font-size: 18pt;
+    height: 62;
+    
+}
+
+startGameButton {
+    background-color: white;
+    color: #313131;
+}
+
+
+gameLabel {
+    color:#F08113;
+    font-size:58pt;
+    font-family:"Roboto Condensed";
+    font-style:"Regular";
+}
+

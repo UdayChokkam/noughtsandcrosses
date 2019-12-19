@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/">
+    <file>images/cross.png</file>
+    <file>images/nought.png</file>
+    <file>styles/style.qss</file>
+  </qresource>
+</RCC>
