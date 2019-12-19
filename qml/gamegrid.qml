@@ -39,13 +39,7 @@ Rectangle {
                 
                 Connections {
                     target: W
-                    onGameOver: {
-                        sqMouseArea.enabled = false
-                    }
-                    onGameReset: {
-                        sqMouseArea.enabled = true 
-                        img.source = ""
-                    }
+
                 }
             }
         }
