@@ -214,7 +214,7 @@ void Widget::resetGame()
 
     nxdata.reset(new NXData());
 
-
+    emit gameReset();
 }
 
 void Widget::initializeWins()
@@ -293,7 +293,9 @@ void Widget::setGridItem(const QString which)
     std::size_t row {n/3};
     std::size_t column {n%3};
     QString gameStatus = nxdata->setItem(row, column, currentState);
-
+    if (!gameStatus.isEmpty()) {
+        emit gameOver(gameStatus);
+    }
 }
 
 void Widget::toggleState()
